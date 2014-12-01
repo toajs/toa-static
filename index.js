@@ -20,7 +20,7 @@ module.exports = function toaStatic(options) {
 
   var etag = options.etag !== false;
   var prefix = typeof options.prefix === 'string' ? options.prefix : '/';
-  var index = options.index && typeof options.index === 'string' ? options.prefix : 'index.html';
+  var index = options.index && typeof options.index === 'string' ? options.index : 'index.html';
   var maxAge = options.maxAge > 0 ? +options.maxAge : 0;
   var cacheControl = typeof options.cacheControl === 'string' ? options.cacheControl : null;
   var setStatic = options.setStatic;
