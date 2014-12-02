@@ -1,10 +1,10 @@
 {
   "name": "toa-static",
-  "description": "a static server powered by toa.",
+  "description": "A static server module for toa.",
   "authors": [
     "Yan Qing <admin@zensh.com>"
   ],
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "gzip"
   ],
   "dependencies": {
-    "file-cache": "^0.1.1"
+    "file-cache": "^0.1.1",
+    "thunks": "^2.3.0"
   },
   "devDependencies": {
     "gulp": ">=3.8.0",

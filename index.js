@@ -4,11 +4,10 @@
 // **License:** MIT
 
 var path = require('path');
-var assert = require('assert');
-
+var Thunk = require('thunks')();
 var FileCache = require('file-cache');
 
-module.exports = function toaStatic(options) {
+module.exports = function (options) {
   options = options || {};
   if (typeof options === 'string') options = {root: options};
 
@@ -19,47 +18,59 @@ module.exports = function toaStatic(options) {
   });
 
   var etag = options.etag !== false;
+  var fileMap = options.fileMap || {};
   var prefix = typeof options.prefix === 'string' ? options.prefix : '/';
-  var index = options.index && typeof options.index === 'string' ? options.index : 'index.html';
+  var index = options.index === false ? false : (options.index || 'index.html');
   var maxAge = options.maxAge > 0 ? +options.maxAge : 0;
   var cacheControl = typeof options.cacheControl === 'string' ? options.cacheControl : null;
-  var setStatic = options.setStatic;
+  var staticPath = options.staticPath || options.setStatic;
+  if (typeof staticPath !== 'function') staticPath = null;
 
-  return function (callback) {
-    var ctx = this;
+  return function toaStatic(callback) {
+    var context = this;
+    if (typeof callback !== 'function' ) {
+      context = callback || this;
+      callback = null;
+    }
 
-    if (this.method !== 'HEAD' && this.method !== 'GET') return callback();
+    var thunk = Thunk.call(context, function(done) {
+      var ctx = this;
 
-    var filePath = safeDecodeURIComponent(this.path);
-    var filePath2 = typeof setStatic === 'function' ? setStatic.call(this) : null;
+      if (this.method !== 'HEAD' && this.method !== 'GET') return done();
 
-    if (!filePath2 && filePath.indexOf(prefix) !== 0) return callback();
+      var filePath = safeDecodeURIComponent(this.path);
+      if (fileMap[filePath]) filePath = fileMap[filePath];
+      var filePath2 = staticPath ? staticPath.call(this) : null;
 
-    filePath = filePath2 || filePath;
-    if (!path.extname(filePath)) filePath = path.join(filePath, index);
-    if (filePath[0] === '/') filePath = filePath.slice(1);
+      if (!filePath2 && !fileMap[filePath] && filePath.indexOf(prefix) !== 0) return done();
 
-    fileCache(filePath, this.acceptsEncodings())(function (error, file) {
-      if (error) throw error;
+      filePath = filePath2 || filePath;
+      if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
+      if (filePath[0] === '/') filePath = filePath.slice(1);
 
-      ctx.lastModified = file.mtime;
-      if (etag) ctx.etag = file.md5;
-      if (ctx.fresh) {
-        ctx.status = 304;
-        return;
-      }
+      return fileCache(filePath, this.acceptsEncodings())(function (error, file) {
+        if (error) throw error;
 
-      ctx.type = file.type;
-      ctx.set('Content-MD5', file.md5);
-      ctx.set('Cache-Control', cacheControl || 'max-age=' + maxAge);
+        ctx.lastModified = file.mtime;
+        if (etag) ctx.etag = file.md5;
+        if (ctx.fresh) {
+          ctx.status = 304;
+          return;
+        }
 
-      if (ctx.method === 'HEAD') return;
-      if (file.compress) ctx.set('Content-Encoding', file.compress);
-      ctx.body = file.contents;
-    })(callback);
+        ctx.type = file.type;
+        ctx.set('Content-MD5', file.md5);
+        ctx.set('Cache-Control', cacheControl || 'max-age=' + maxAge);
+
+        if (ctx.method === 'HEAD') return;
+        if (file.compress) ctx.set('Content-Encoding', file.compress);
+        ctx.body = file.contents;
+      })(done);
+    });
+
+    return callback ? thunk(callback) : thunk;
   };
 };
-
 
 function safeDecodeURIComponent(path) {
   try {

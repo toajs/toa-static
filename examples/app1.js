@@ -4,8 +4,11 @@
 // **License:** MIT
 
 var Toa = require('toa');
-var toaStatic = require('../index')('examples/static');
+var toaStatic = require('../index')({
+  root: 'examples/static',
+  maxAge: 1000 * 60 * 60
+});
 
 Toa(function (Thunk) {
-  return toaStatic;
+  return toaStatic(this);
 }).listen(3000);
