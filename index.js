@@ -21,28 +21,23 @@ module.exports = function (options) {
   var fileMap = options.fileMap || {};
   var prefix = typeof options.prefix === 'string' ? options.prefix : '/';
   var index = options.index === false ? false : (options.index || 'index.html');
-  var maxAge = options.maxAge > 0 ? +options.maxAge : 0;
+  var maxAge = options.maxAge >= 0 ? Math.ceil(options.maxAge / 1000) : 24 * 60 * 60 * 30;
   var cacheControl = typeof options.cacheControl === 'string' ? options.cacheControl : null;
   var staticPath = options.staticPath || options.setStatic;
   if (typeof staticPath !== 'function') staticPath = null;
 
   return function toaStatic(callback) {
-    var context = this;
-    if (typeof callback !== 'function' ) {
-      context = callback || this;
-      callback = null;
-    }
 
-    var thunk = Thunk.call(context, function(done) {
+    return Thunk.call(this)(function() {
       var ctx = this;
 
-      if (this.method !== 'HEAD' && this.method !== 'GET') return done();
+      if (this.method !== 'HEAD' && this.method !== 'GET') return;
 
       var filePath = safeDecodeURIComponent(this.path);
       if (fileMap[filePath]) filePath = fileMap[filePath];
       var filePath2 = staticPath ? staticPath.call(this) : null;
 
-      if (!filePath2 && !fileMap[filePath] && filePath.indexOf(prefix) !== 0) return done();
+      if (!filePath2 && !fileMap[filePath] && filePath.indexOf(prefix) !== 0) return;
 
       filePath = filePath2 || filePath;
       if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
@@ -51,6 +46,7 @@ module.exports = function (options) {
       return fileCache(filePath, this.acceptsEncodings())(function (error, file) {
         if (error) throw error;
 
+        ctx.status = 200;
         ctx.lastModified = file.mtime;
         if (etag) ctx.etag = file.md5;
         if (ctx.fresh) {
@@ -65,10 +61,8 @@ module.exports = function (options) {
         if (ctx.method === 'HEAD') return;
         if (file.compress) ctx.set('Content-Encoding', file.compress);
         ctx.body = file.contents;
-      })(done);
-    });
-
-    return callback ? thunk(callback) : thunk;
+      });
+    })(callback);
   };
 };
 
