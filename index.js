@@ -20,6 +20,7 @@ module.exports = function (options) {
   var etag = options.etag !== false;
   var fileMap = options.fileMap || {};
   var prefix = typeof options.prefix === 'string' ? options.prefix : '/';
+  var prunePrefix = !!options.prunePrefix;
   var index = options.index === false ? false : (options.index || 'index.html');
   var maxAge = options.maxAge >= 0 ? Math.ceil(options.maxAge / 1000) : 24 * 60 * 60 * 30;
   var cacheControl = typeof options.cacheControl === 'string' ? options.cacheControl : null;
@@ -34,12 +35,15 @@ module.exports = function (options) {
       if (this.method !== 'HEAD' && this.method !== 'GET') return;
 
       var filePath = safeDecodeURIComponent(this.path);
+      if (filePath.indexOf(prefix) !== 0) return;
+      if (prunePrefix) filePath = filePath.replace(prefix, '');
+
       if (fileMap[filePath]) filePath = fileMap[filePath];
       var filePath2 = staticPath ? staticPath.call(this) : null;
 
-      if (!filePath2 && !fileMap[filePath] && filePath.indexOf(prefix) !== 0) return;
-
       filePath = filePath2 || filePath;
+      if (!filePath) return;
+      
       if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
       if (filePath[0] === '/') filePath = filePath.slice(1);
 

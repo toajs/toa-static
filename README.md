@@ -1,6 +1,10 @@
-toa-static v0.3.0 [![Build Status](https://travis-ci.org/toajs/toa-static.svg)](https://travis-ci.org/toajs/toa-static)
+toa-static
 ====
 A static server module for toa.
+
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Talk topic][talk-image]][talk-url]
 
 ## [toa](https://github.com/toajs/toa)
 
@@ -51,9 +55,16 @@ Return a thunk function.
 - `options.compress` (Boolean) - When request's accept-encoding include gzip or deflate, files will compressed.
 - `options.fileMap` (Object) - Object map of aliases.
 - `options.prefix` (String) - The url prefix you wish to serve as static request, default to `'/'`.
+- `options.prunePrefix` (Boolean) - Prune the prefix from URL path, default to `false`.
 - `options.files` (Array) - files path you wish to serve.
 - `options.staticPath` (Function) - Function to return a custom static file path. the `context` of this function is **toa's context**.
 
 ## License
 
 The MIT License (MIT)
+
+[npm-url]: https://npmjs.org/package/toa-static
+[npm-image]: http://img.shields.io/npm/v/toa-static.svg
+
+[travis-url]: https://travis-ci.org/toajs/toa-static
+[travis-image]: http://img.shields.io/travis/toajs/toa-static.svg
