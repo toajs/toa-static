@@ -11,12 +11,6 @@ module.exports = function (options) {
   options = options || {};
   if (typeof options === 'string') options = {root: options};
 
-  var fileCache = FileCache({
-    root: options.root,
-    compress: options.compress,
-    extraFiles: options.files
-  });
-
   var etag = options.etag !== false;
   var fileMap = options.fileMap || {};
   var prefix = typeof options.prefix === 'string' ? options.prefix : '/';
@@ -26,6 +20,13 @@ module.exports = function (options) {
   var cacheControl = typeof options.cacheControl === 'string' ? options.cacheControl : null;
   var staticPath = options.staticPath || options.setStatic;
   if (typeof staticPath !== 'function') staticPath = null;
+
+  var fileCache = FileCache({
+    root: options.root,
+    extraFiles: options.files,
+    compress: options.compress,
+    maxCacheLength: options.maxCacheLength
+  });
 
   return function toaStatic(callback) {
 
@@ -43,7 +44,7 @@ module.exports = function (options) {
 
       filePath = filePath2 || filePath;
       if (!filePath) return;
-      
+
       if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
       if (filePath[0] === '/') filePath = filePath.slice(1);
 

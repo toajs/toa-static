@@ -58,6 +58,8 @@ Return a thunk function.
 - `options.prunePrefix` (Boolean) - Prune the prefix from URL path, default to `false`.
 - `options.files` (Array) - files path you wish to serve.
 - `options.staticPath` (Function) - Function to return a custom static file path. the `context` of this function is **toa's context**.
+- `options.maxCacheLength` (Number) - The maximum length of the files cache in bytes. if cache's size > maxCacheLength, then the least recently used (LRU) file will be removed. if maxCacheLength === -1, cache will not be used. if maxCacheLength === 0, there is no limit.
+, default to `0`.
 
 ## License
 
