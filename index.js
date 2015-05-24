@@ -4,7 +4,6 @@
 // **License:** MIT
 
 var path = require('path');
-var Thunk = require('thunks')();
 var FileCache = require('file-cache');
 
 module.exports = function (options) {
@@ -29,44 +28,39 @@ module.exports = function (options) {
   });
 
   return function toaStatic(callback) {
+    if (this.method !== 'HEAD' && this.method !== 'GET') return callback();
 
-    return Thunk.call(this)(function() {
-      var ctx = this;
+    var filePath = safeDecodeURIComponent(this.path);
+    if (filePath.indexOf(prefix) !== 0) return callback();
+    if (prunePrefix) filePath = filePath.replace(prefix, '');
 
-      if (this.method !== 'HEAD' && this.method !== 'GET') return;
+    if (fileMap[filePath]) filePath = fileMap[filePath];
+    var filePath2 = staticPath ? staticPath.call(this) : null;
 
-      var filePath = safeDecodeURIComponent(this.path);
-      if (filePath.indexOf(prefix) !== 0) return;
-      if (prunePrefix) filePath = filePath.replace(prefix, '');
+    filePath = filePath2 || filePath;
+    if (!filePath) return callback();
+    if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
+    if (filePath[0] === '/') filePath = filePath.slice(1);
 
-      if (fileMap[filePath]) filePath = fileMap[filePath];
-      var filePath2 = staticPath ? staticPath.call(this) : null;
+    var ctx = this;
+    return fileCache(filePath, this.acceptsEncodings())(function (error, file) {
+      if (error) throw error;
 
-      filePath = filePath2 || filePath;
-      if (!filePath) return;
+      ctx.status = 200;
+      ctx.lastModified = file.mtime;
+      if (etag) ctx.etag = file.md5;
+      if (ctx.fresh) {
+        ctx.status = 304;
+        return;
+      }
 
-      if (index && !path.extname(filePath)) filePath = path.join(filePath, index);
-      if (filePath[0] === '/') filePath = filePath.slice(1);
+      ctx.type = file.type;
+      ctx.set('Content-MD5', file.md5);
+      ctx.set('Cache-Control', cacheControl || 'max-age=' + maxAge);
 
-      return fileCache(filePath, this.acceptsEncodings())(function (error, file) {
-        if (error) throw error;
-
-        ctx.status = 200;
-        ctx.lastModified = file.mtime;
-        if (etag) ctx.etag = file.md5;
-        if (ctx.fresh) {
-          ctx.status = 304;
-          return;
-        }
-
-        ctx.type = file.type;
-        ctx.set('Content-MD5', file.md5);
-        ctx.set('Cache-Control', cacheControl || 'max-age=' + maxAge);
-
-        if (ctx.method === 'HEAD') return;
-        if (file.compress) ctx.set('Content-Encoding', file.compress);
-        ctx.body = file.contents;
-      });
+      if (ctx.method === 'HEAD') return;
+      if (file.compress) ctx.set('Content-Encoding', file.compress);
+      ctx.body = file.contents;
     })(callback);
   };
 };
