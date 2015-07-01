@@ -1,1 +1,3 @@
-alert('Hi, toa-static server');
+/*global alert */
+
+alert('Hi, toa-static server')
