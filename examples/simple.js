@@ -4,8 +4,25 @@
 // **License:** MIT
 
 var Toa = require('toa')
-var toaStatic = require('../index')('examples/static')
+var Router = require('toa-router')
+var toaStatic = require('toa-static')
 
-Toa(function () {
-  return toaStatic
-}).listen(3000)
+var router = new Router()
+  .get('/', function () {
+    this.body = 'Hello'
+  })
+  .get('/(*)', function () {
+    this.body = this.method + ' ' + this.path
+  })
+
+var staticFn = toaStatic({
+  root: 'examples/static',
+  prefix: '/static'
+})
+
+var app = Toa(function *() {
+  yield staticFn
+  yield router
+})
+
+app.listen(3000)

@@ -4,7 +4,7 @@ A static server module for toa.
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
-[![Talk topic][talk-image]][talk-url]
+[![Downloads][downloads-image]][downloads-url]
 
 ## [toa](https://github.com/toajs/toa)
 
@@ -13,22 +13,15 @@ A static server module for toa.
 ```js
 'use strict';
 
-var Toa = require('toa');
-var toaStatic = require('toa-static')('examples/static');
-```
-
-**use as module:**
-```js
-Toa(function (Thunk) {
-  return Thunk.call(this, toaStatic);
-}).listen(3000);
+var Toa = require('toa')
+var toaStatic = require('toa-static')('examples/static')
 ```
 
 **use as middleware:**
 ```js
-var app = Toa();
-app.use(toaStatic);
-app.listen(3000);
+var app = Toa()
+app.use(toaStatic)
+app.listen(3000)
 ```
 
 ## Installation
@@ -40,7 +33,7 @@ npm install toa-static
 ## API
 
 ```js
-var ToaStatic = require('toa-static');
+var ToaStatic = require('toa-static')
 ```
 
 ### ToaStatic(options)
@@ -70,3 +63,6 @@ The MIT License (MIT)
 
 [travis-url]: https://travis-ci.org/toajs/toa-static
 [travis-image]: http://img.shields.io/travis/toajs/toa-static.svg
+
+[downloads-url]: https://npmjs.org/package/toa-static
+[downloads-image]: http://img.shields.io/npm/dm/toa-static.svg?style=flat-square
