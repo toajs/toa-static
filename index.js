@@ -28,7 +28,8 @@ module.exports = function (options) {
   })
 
   return function toaStatic (callback) {
-    if (this.method !== 'HEAD' && this.method !== 'GET') return callback()
+    var method = this.method
+    if (method !== 'HEAD' && method !== 'GET') return callback()
 
     var filePath = safeDecodeURIComponent(this.path)
     if (filePath.indexOf(prefix) !== 0) return callback()
@@ -44,7 +45,7 @@ module.exports = function (options) {
 
     var ctx = this
     return fileCache(filePath, this.acceptsEncodings())(function (error, file) {
-      if (error) throw error
+      if (error) ctx.throw(404)
 
       ctx.status = 200
       ctx.lastModified = file.mtime
@@ -58,7 +59,7 @@ module.exports = function (options) {
       ctx.set('Content-MD5', file.md5)
       ctx.set('Cache-Control', cacheControl || 'max-age=' + maxAge)
 
-      if (ctx.method === 'HEAD') return ctx.end()
+      if (method === 'HEAD') return ctx.end()
       if (file.compress) ctx.set('Content-Encoding', file.compress)
       ctx.body = file.contents
       ctx.end()

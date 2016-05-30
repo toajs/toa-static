@@ -20,7 +20,7 @@ var staticFn = toaStatic({
   prefix: '/static'
 })
 
-var app = Toa(function *() {
+var app = Toa(function * () {
   yield staticFn
   yield router
 })
